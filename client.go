@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -398,6 +400,15 @@ func (client *Client) SetDSN(dsn string) error {
 
 	client.authHeader = fmt.Sprintf("Sentry sentry_version=4, sentry_key=%s, sentry_secret=%s", publicKey, secretKey)
 
+	switch uri.Scheme {
+	case "udp":
+		udpConn, err := net.Dial("udp", uri.Host)
+		if err != nil {
+			return err
+		}
+		client.Transport = &UDPTransport{udpConn}
+	}
+
 	return nil
 }
 
@@ -656,6 +667,21 @@ func SetUserContext(u *User)             { DefaultClient.SetUserContext(u) }
 func SetHttpContext(h *Http)             { DefaultClient.SetHttpContext(h) }
 func SetTagsContext(t map[string]string) { DefaultClient.SetTagsContext(t) }
 func ClearContext()                      { DefaultClient.ClearContext() }
+
+// UDPTransport is a legacy transport mechanism
+type UDPTransport struct {
+	UDP net.Conn
+}
+
+// Send implements the send mechanism for UDPTransport
+func (t *UDPTransport) Send(url, authHeader string, packet *Packet) error {
+	body, _ := serializedPacket(packet) // Don't give a toss about ContentType
+	if wrote, err := io.Copy(t.UDP, body); err != nil {
+		log.Println("Error sending data ", err, "wrote", wrote)
+	}
+
+	return nil
+}
 
 // HTTPTransport is the default transport, delivering packets to Sentry via the
 // HTTP API.

@@ -109,6 +109,21 @@ func TestSetDSN(t *testing.T) {
 	}
 }
 
+func TestSetDSNToUDP(t *testing.T) {
+	client := &Client{}
+	client.SetDSN("udp://u:p@example.com/sentry/1")
+
+	if client.url != "udp://example.com/sentry/api/1/store/" {
+		t.Error("incorrect url:", client.url)
+	}
+	if client.projectID != "1" {
+		t.Error("incorrect projectID:", client.projectID)
+	}
+	if client.authHeader != "Sentry sentry_version=4, sentry_key=u, sentry_secret=p" {
+		t.Error("incorrect authHeader:", client.authHeader)
+	}
+}
+
 func TestUnmarshalTag(t *testing.T) {
 	actual := new(Tag)
 	if err := json.Unmarshal([]byte(`["foo","bar"]`), actual); err != nil {

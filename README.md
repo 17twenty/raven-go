@@ -6,6 +6,9 @@ event/error logging system.
 - [**API Documentation**](https://godoc.org/github.com/getsentry/raven-go)
 - [**Usage and Examples**](https://docs.getsentry.com/hosted/clients/go/)
 
+## UDP Support ##
+This version features support for the old UDP based Sentry comms
+
 ## Installation
 
 ```text
